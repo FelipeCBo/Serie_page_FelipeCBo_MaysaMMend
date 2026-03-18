@@ -1,0 +1,86 @@
+body {
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    flex-direction: column;
+    background-color: #ebebeb;
+    margin-left: 20rem;
+    margin-right: 20rem;
+}
+
+h1 {
+    font-size: 50px;
+}
+
+.element {
+    margin: 1rem;
+}
+
+.header {
+    border: 1px solid black;
+    width: 100%;
+    height: 10rem;
+    justify-content:space-between;
+    display: flex;
+    align-items: center;
+    box-shadow: 6px 6px 6px gray;
+    margin-bottom: 2rem;
+}
+
+.menu {
+    background-color: rgba(128, 128, 128, 0.582);
+    width: 3rem;
+    height: 3rem;
+    border-radius: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.logo {
+    background-color: #5252dd;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.movie_body {
+    background-color: white;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    display: flex;
+}
+
+img {
+    max-width: 100%;
+    max-height: auto;
+}
+
+.serie_log {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.serie_name {
+    font-size: 40px;
+    font-family: serif, 'Times New Roman', Times;
+    margin-right: 40%;
+}
+
+.stars {
+    font-size: 40px;
+    color: gold;
+    margin-left: 20%;
+}
+
+.sinopse {
+    width: 60%;
+    text-indent: 30px;
+    text-align: justify;
+    line-height: 1.6;
+}
