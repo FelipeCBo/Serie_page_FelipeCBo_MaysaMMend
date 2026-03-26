@@ -90,8 +90,12 @@ form {
 
 .form-group {
     display: grid;
-    flex-direction: column;
-    margin-top: 1rem;
+    gap: 5px;
+}
+
+input[type="file"] {
+    height: auto;
+    padding: 5px;
 }
 
 input {
