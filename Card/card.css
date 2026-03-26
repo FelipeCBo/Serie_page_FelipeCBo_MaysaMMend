@@ -3,7 +3,7 @@ body {
     align-items: center;
     display: flex;
     flex-direction: column;
-    background-color: rgb(235, 235, 235);
+    background-color: #ebebeb;
     margin-left: 20rem;
     margin-right: 20rem;
 }
@@ -76,3 +76,41 @@ img {
 }
 
 /*---------- Fim do básico de todas as páginas ----------*/
+
+.movie_body {
+    background-color: white;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    display: flex;
+}
+
+img {
+    max-width: 100%;
+    max-height: auto;
+}
+
+.serie_log {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.serie_name {
+    font-size: 40px;
+    font-family: serif, 'Times New Roman', Times;
+    margin-right: 40%;
+}
+
+.stars {
+    font-size: 40px;
+    color: gold;
+    margin-left: 20%;
+}
+
+.sinopse {
+    width: 60%;
+    text-indent: 30px;
+    text-align: justify;
+    line-height: 1.6;
+}
