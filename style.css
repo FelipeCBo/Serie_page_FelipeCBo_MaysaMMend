@@ -25,14 +25,15 @@ h1 {
     margin-bottom: 2rem;
 }
 
-.logo {
-    background-color: #5252dd;
+.background_button {
+    background-color: hwb(240 49% 20%);
     width: 3rem;
     height: 3rem;
     border-radius: 30px;
     display: flex;
     justify-content: center;
     align-items: center;
+    box-shadow: 6px 6px 6px;
 }
 
 img {
@@ -72,6 +73,27 @@ img {
     height: 100%;
     margin: 5px;
     text-align: center;
+}
+
+/*---------- Dark theme ----------*/
+
+body.dark_background {
+    background-color: hsl(0, 0%, 18%);
+    color: white;
+}
+
+body.dark_background .header {
+    border: 1px solid #b8b8b8;
+    box-shadow: 6px 6px 6px rgb(187, 187, 187);
+    color: white;
+}
+
+body.dark_background .menu {
+    background-color: #c7c5c594;
+}
+
+body.dark_background .series_catalog {
+    background-color: hwb(0 13% 87%);
 }
 
 /*---------- Fim do básico de todas as páginas ----------*/
