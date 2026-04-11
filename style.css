@@ -84,7 +84,7 @@ body.dark_background {
 
 body.dark_background .header {
     border: 1px solid #b8b8b8;
-    box-shadow: 6px 6px 6px rgb(187, 187, 187);
+    box-shadow: 6px 6px 6px #6e6e6e;
     color: white;
 }
 
@@ -94,6 +94,10 @@ body.dark_background .menu {
 
 body.dark_background .series_catalog {
     background-color: hwb(0 13% 87%);
+}
+
+body.dark_background .background_button {
+    box-shadow: 6px 6px 6px #6e6e6e;
 }
 
 /*---------- Fim do básico de todas as páginas ----------*/
