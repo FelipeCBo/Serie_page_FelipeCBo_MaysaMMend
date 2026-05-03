@@ -18,25 +18,29 @@
         <div class="background_button element" id="background_button">Button</div>
     </div>
 
-    <form>
+    <form id="meu_formulario">
 
-        <div class="form-group">
-            <label for="sname">Nome da série</label>
-            <input type="name" name="sname" id="sname" required>
+        <div class="form_group">
+            <label for="stitulo">Nome da série:</label>
+            <input type="name" name="stitulo" id="stitulo"  placeholder="Título" required>
         </div>
-        <div class="form-group">
-            <label for="image">Imagem</label>
-            <input type="file" name="image" id="image" required>
+        <div class="form_group">
+            <label for="image">Imagem:</label>
+            <input type="file" name="image" id="image" placeholder="URL da imagem" required>
         </div>
-        <div class="form-group">
-            <label for="desc">Escreva sobre a série</label>
-            <textarea name="desc" id="desc" required></textarea>
+        <div class="form_group">
+            <label for="desc">Escreva sobre a série:</label>
+            <textarea name="desc" id="desc" placeholder="Descrição" required></textarea>
         </div>
 
-        <button type="submit" id="submit_button" class="form-group">Enviar série</button>
+        <button type="submit" id="submit_button" class="form_group">Enviar série</button>
         
     </form>
 
-    <script src="script.js" defer></script>
+    </div>
+        <div class="series_catalog" id="series_catalog">
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
