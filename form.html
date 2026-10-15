@@ -1,45 +1,85 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="form.css">
-    <title>Form</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
+    <title>Cadastro — Mafe</title>
+    <script>
+        if (localStorage.getItem("tema") === "escuro") {
+            document.documentElement.classList.add("dark_background");
+        }
+    </script>
 </head>
 <body>
 
-    <div class="header">
-        <div class="menu">
-            <div class="home_button"><a href="/index.html">Home</a></div>
-            <div class="card_button"><a href="/card.html">Card</a></div>
-            <div class="cad_button"><a href="/form.html">Cadastro</a></div>
-        </div>
-        <div class="page_name element"><h1>- Mafe -</h1></div>
-        <div class="background_button element" id="background_button">Button</div>
-    </div>
+    <header class="header">
+        <a href="index.html" class="logo" id="logo_toggle" title="Alternar tema">
+            <span class="logo_mark">M</span>
+            <span class="logo_text">Mafe</span>
+        </a>
 
-    <form id="meu_formulario">
+        <nav class="menu">
+            <a href="index.html" class="menu_link">Home</a>
+            <a href="form.html" class="menu_link active">Cadastro</a>
+        </nav>
+    </header>
 
-        <div class="form_group">
-            <label for="stitulo">Nome da série:</label>
-            <input type="name" name="stitulo" id="stitulo"  placeholder="Título" required>
-        </div>
-        <div class="form_group">
-            <label for="image">Imagem:</label>
-            <input type="file" name="image" id="image" placeholder="URL da imagem" required>
-        </div>
-        <div class="form_group">
-            <label for="desc">Escreva sobre a série:</label>
-            <textarea name="desc" id="desc" placeholder="Descrição" required></textarea>
-        </div>
+    <main class="page_content">
+        <form id="meu_formulario" novalidate>
 
-        <button type="submit" id="submit_button" class="form_group">Enviar série</button>
-        
-    </form>
+            <h2 class="form_title" id="form_title">Adicionar nova série</h2>
 
-    </div>
-        <div class="series_catalog" id="series_catalog">
-    </div>
+            <div class="form_group">
+                <label for="stitulo">Nome da série</label>
+                <input type="text" name="stitulo" id="stitulo" placeholder="Ex: Breaking Bad" required>
+                <span class="form_error" id="erro_titulo"></span>
+            </div>
+
+            <div class="form_group">
+                <label for="genero">Gênero</label>
+                <select name="genero" id="genero" class="form_select">
+                    <option value="">Selecione um gênero</option>
+                    <option value="Ação">Ação</option>
+                    <option value="Aventura">Aventura</option>
+                    <option value="Comédia">Comédia</option>
+                    <option value="Drama">Drama</option>
+                    <option value="Ficção">Ficção</option>
+                    <option value="Terror">Terror</option>
+                    <option value="Suspense">Suspense</option>
+                    <option value="Outro">Outro</option>
+                </select>
+                <span class="form_error" id="erro_genero"></span>
+            </div>
+
+            <div class="form_group">
+                <label for="image">Imagem de capa</label>
+                <input type="file" name="image" id="image" accept="image/*">
+                <span class="form_error" id="erro_image"></span>
+                <div class="image_preview" id="image_preview" hidden>
+                    <img id="preview_img" src="" alt="Pré-visualização">
+                    <button type="button" class="preview_remove" id="preview_remove">Remover imagem</button>
+                </div>
+            </div>
+
+            <div class="form_group">
+                <label for="desc">Sinopse</label>
+                <textarea name="desc" id="desc" placeholder="Escreva sobre a série..." required></textarea>
+                <span class="form_error" id="erro_desc"></span>
+            </div>
+
+            <div class="form_actions">
+                <button type="submit" id="submit_button">Enviar série</button>
+                <a href="index.html" class="cancel_link" id="cancel_link" hidden>Cancelar edição</a>
+            </div>
+
+        </form>
+    </main>
+
+    <footer class="footer">
+        <p>Feito com ♥ por você · Mafe 2026</p>
+    </footer>
 
     <script src="script.js"></script>
 </body>
