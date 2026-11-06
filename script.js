@@ -1,83 +1,29 @@
 /* ============================================================
-   CONSTANTES
+   CONSTANTES E ESTADO GLOBAL
    ============================================================ */
-
-const CHAVE_SERIES = "mafe_series";
 const CHAVE_TEMA = "tema";
 const CHAVE_SERIE_SELECIONADA = "mafe_serie_selecionada";
 const CHAVE_SERIE_EDITANDO = "mafe_serie_editando";
-const CHAVE_AVALIACOES = "mafe_avaliacoes";
-const CHAVE_SEED_FEITO = "mafe_seed_v1";
 
 /* ============================================================
    TEMA (logo "Mafe")
    ============================================================ */
-
 const LOGO_TOGGLE = document.getElementById("logo_toggle");
-
 if (LOGO_TOGGLE) {
     LOGO_TOGGLE.addEventListener("click", (event) => {
         event.preventDefault();
-
         const html = document.documentElement;
         html.classList.toggle("dark_background");
-
         const estaEscuro = html.classList.contains("dark_background");
         localStorage.setItem(CHAVE_TEMA, estaEscuro ? "escuro" : "claro");
     });
 }
 
 /* ============================================================
-   UTILIDADES
+   UTILIDADES E CHAMADAS À API
    ============================================================ */
-
-function lerSeries() {
-    try {
-        const dados = localStorage.getItem(CHAVE_SERIES);
-        if (!dados) return [];
-        const lista = JSON.parse(dados);
-        return Array.isArray(lista) ? lista : [];
-    } catch (erro) {
-        console.warn("Erro ao ler séries:", erro);
-        return [];
-    }
-}
-
-function salvarSeries(lista) {
-    try {
-        localStorage.setItem(CHAVE_SERIES, JSON.stringify(lista));
-    } catch (erro) {
-        console.warn("Erro ao salvar séries:", erro);
-    }
-}
-
 function gerarId() {
     return "serie_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
-}
-
-function lerAvaliacoes() {
-    try {
-        const dados = localStorage.getItem(CHAVE_AVALIACOES);
-        if (!dados) return {};
-        const obj = JSON.parse(dados);
-        return obj && typeof obj === "object" ? obj : {};
-    } catch (erro) {
-        return {};
-    }
-}
-
-function salvarAvaliacoes(obj) {
-    try {
-        localStorage.setItem(CHAVE_AVALIACOES, JSON.stringify(obj));
-    } catch (erro) {
-        console.warn("Erro ao salvar avaliações:", erro);
-    }
-}
-
-function calcularMedia(serieId) {
-    const avaliacoes = lerAvaliacoes();
-    const nota = avaliacoes[serieId];
-    return typeof nota === "number" ? nota : 0;
 }
 
 function truncarTexto(texto, limite) {
@@ -86,68 +32,36 @@ function truncarTexto(texto, limite) {
     return texto.slice(0, limite).trim() + "...";
 }
 
-/* ============================================================
-   SEED — popula 3 séries na primeira visita
-   ============================================================ */
-
-const seriesExemplo = [
-    {
-        id: "exemplo_breaking_bad",
-        titulo: "Breaking Bad",
-        genero: "Drama",
-        descricao: "Walter White, um professor de química do ensino médio, é diagnosticado com câncer de pulmão em estágio terminal. Para garantir o futuro financeiro de sua família, ele decide usar seus conhecimentos de química para fabricar e vender metanfetamina, mergulhando em um mundo perigoso do crime organizado.",
-        imagem: "https://image.tmdb.org/t/p/w500/ggFHVNu6YYI5L9pCfOacjizRGt.jpg",
-        descImagem: "Pôster da série Breaking Bad"
-    },
-    {
-        id: "exemplo_stranger_things",
-        titulo: "Stranger Things",
-        genero: "Ficção",
-        descricao: "Quando um garoto desaparece em uma pequena cidade de Indiana, seus amigos descobrem uma menina misteriosa com poderes telecinéticos. Juntos, eles precisam enfrentar forças sobrenaturais e segredos do governo que ameaçam a cidade e o mundo como o conhecem.",
-        imagem: "https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg",
-        descImagem: "Pôster da série Stranger Things"
-    },
-    {
-        id: "exemplo_the_crown",
-        titulo: "The Crown",
-        genero: "Drama",
-        descricao: "A série acompanha a trajetória da Rainha Elizabeth II desde sua juventude até os dias atuais, retratando os bastidores da realeza britânica, as crises políticas, os escândalos familiares e os eventos históricos que marcaram o século XX e XXI.",
-        imagem: "https://image.tmdb.org/t/p/w500/1M876KPjulVwppEpldhdc8V4o68.jpg",
-        descImagem: "Pôster da série The Crown"
-    }
-];
-
-(function popularSeVazio() {
+async function buscarSeriesAPI() {
     try {
-        const jaFezSeed = localStorage.getItem(CHAVE_SEED_FEITO);
-        const listaAtual = lerSeries();
-
-        if (!jaFezSeed && listaAtual.length === 0) {
-            salvarSeries(seriesExemplo);
-            localStorage.setItem(CHAVE_SEED_FEITO, "sim");
-        }
-    } catch (erro) {
-        console.warn("Erro ao popular séries de exemplo:", erro);
+        const res = await fetch('/api/series');
+        return await res.json();
+    } catch (e) { 
+        console.error("Erro ao buscar séries:", e); 
+        return []; 
     }
-})();
+}
 
-/* ============================================================
-   SÉRIE DESTAQUE (quando o catálogo está vazio)
-   ============================================================ */
+async function buscarAvaliacoesAPI() {
+    try {
+        const res = await fetch('/api/avaliacoes');
+        return await res.json();
+    } catch (e) { 
+        console.error("Erro ao buscar avaliações:", e); 
+        return {}; 
+    }
+}
 
-const serieDestaque = {
-    id: "destaque_black_mirror",
-    titulo: "Black Mirror",
-    genero: "Ficção",
-    descricao: "Na série Black Mirror, lançada pela Netflix, acompanhamos em cada episódio histórias e contos de antologias explorando um mundo de alta tecnologia. Em uma referência de híbrido entre \"The Twilight Zone\" e \"Tales of the Unexpected\", a série explora as sensações do mal-estar contemporâneo, onde os princípios morais da humanidade colidem com as inovações tecnológicas. Do romance ao terror, da comédia ao drama, cada episódio explora uma narrativa diferente, traçando uma antologia que mostra o lado danoso da vida dependente da tecnologia.",
-    imagem: "https://portaln10.com.br/wp-content/uploads/2025/03/black-mirror-poster-gbqux8n5pndwjdrn-768x432.jpg",
-    descImagem: "Imagem promocional da série Black Mirror"
-};
+let cacheAvaliacoes = {};
+
+function calcularMedia(serieId) {
+    const nota = cacheAvaliacoes[serieId];
+    return typeof nota === "number" ? nota : 0;
+}
 
 /* ============================================================
    HOME — Carrossel
    ============================================================ */
-
 const carouselEl = document.getElementById("carousel");
 const carouselTrack = document.getElementById("carousel_track");
 const carouselDots = document.getElementById("carousel_dots");
@@ -163,7 +77,6 @@ function criarSlide(serie) {
     slide.classList.add("carousel_slide");
     slide.href = "card.html";
     slide.style.backgroundImage = `url("${serie.imagem}")`;
-
     slide.addEventListener("click", () => {
         sessionStorage.setItem(CHAVE_SERIE_SELECIONADA, JSON.stringify(serie));
     });
@@ -189,7 +102,6 @@ function criarSlide(serie) {
 
     content.append(badge, titulo, desc, btn);
     slide.appendChild(content);
-
     return slide;
 }
 
@@ -205,7 +117,6 @@ function criarDot(index) {
 function irParaSlide(index) {
     if (totalSlides === 0) return;
     slideAtual = (index + totalSlides) % totalSlides;
-
     carouselTrack.style.transform = `translateX(-${slideAtual * 100}%)`;
 
     const dots = carouselDots.querySelectorAll(".carousel_dot");
@@ -217,68 +128,58 @@ function irParaSlide(index) {
 function iniciarAutoPlay() {
     pararAutoPlay();
     if (totalSlides <= 1) return;
-
-    autoPlayTimer = setInterval(() => {
-        irParaSlide(slideAtual + 1);
-    }, 6000);
+    autoPlayTimer = setInterval(() => irParaSlide(slideAtual + 1), 6000);
 }
 
 function pararAutoPlay() {
-    if (autoPlayTimer) {
-        clearInterval(autoPlayTimer);
-        autoPlayTimer = null;
+    if (autoPlayTimer) { 
+        clearInterval(autoPlayTimer); 
+        autoPlayTimer = null; 
     }
 }
 
-function montarCarrossel() {
+async function montarCarrossel() {
     if (!carouselEl || !carouselTrack || !carouselDots) return;
-
-    const series = lerSeries();
-
+    
+    const series = await buscarSeriesAPI();
     if (series.length === 0) {
         carouselEl.hidden = true;
         return;
     }
 
-    // Pega até 5 mais recentes pro carrossel
     const destaques = series.slice(-5).reverse();
-
     carouselEl.hidden = false;
     carouselTrack.innerHTML = "";
     carouselDots.innerHTML = "";
 
-    destaques.forEach((serie) => {
-        carouselTrack.appendChild(criarSlide(serie));
-    });
-
+    destaques.forEach((serie) => carouselTrack.appendChild(criarSlide(serie)));
     totalSlides = destaques.length;
 
     if (totalSlides > 1) {
-        destaques.forEach((_, i) => {
-            carouselDots.appendChild(criarDot(i));
-        });
+        destaques.forEach((_, i) => carouselDots.appendChild(criarDot(i)));
     }
 
     slideAtual = 0;
     irParaSlide(0);
     iniciarAutoPlay();
+}
 
-    if (carouselPrev) {
-        carouselPrev.addEventListener("click", (e) => {
-            e.preventDefault();
-            irParaSlide(slideAtual - 1);
-            iniciarAutoPlay();
-        });
-    }
-
-    if (carouselNext) {
-        carouselNext.addEventListener("click", (e) => {
-            e.preventDefault();
-            irParaSlide(slideAtual + 1);
-            iniciarAutoPlay();
-        });
-    }
-
+// Listeners do carrossel registrados apenas uma vez
+if (carouselPrev) {
+    carouselPrev.addEventListener("click", (e) => { 
+        e.preventDefault(); 
+        irParaSlide(slideAtual - 1); 
+        iniciarAutoPlay(); 
+    });
+}
+if (carouselNext) {
+    carouselNext.addEventListener("click", (e) => { 
+        e.preventDefault(); 
+        irParaSlide(slideAtual + 1); 
+        iniciarAutoPlay(); 
+    });
+}
+if (carouselEl) {
     carouselEl.addEventListener("mouseenter", pararAutoPlay);
     carouselEl.addEventListener("mouseleave", iniciarAutoPlay);
 }
@@ -286,7 +187,6 @@ function montarCarrossel() {
 /* ============================================================
    HOME — Catálogo (grid de cards)
    ============================================================ */
-
 const container = document.getElementById("series_catalog");
 const counterEl = document.getElementById("catalog_counter");
 const emptyStateEl = document.getElementById("empty_state");
@@ -297,6 +197,7 @@ const genreFilterEl = document.getElementById("genre_filter");
 let filtroBusca = "";
 let filtroGenero = "todos";
 let ordenacaoAtual = "recentes";
+let todasAsSeries = [];
 
 function criarCard(serie) {
     const card = document.createElement("div");
@@ -376,56 +277,31 @@ function criarCard(serie) {
 
     card.append(imgWrap, info);
     link.appendChild(card);
-
     return link;
 }
 
 function aplicarFiltros(lista) {
     let resultado = lista.slice();
-
     if (filtroBusca.trim() !== "") {
         const busca = filtroBusca.toLowerCase();
-        resultado = resultado.filter((s) =>
-            (s.titulo || "").toLowerCase().includes(busca)
-        );
+        resultado = resultado.filter((s) => (s.titulo || "").toLowerCase().includes(busca));
     }
-
     if (filtroGenero !== "todos") {
         resultado = resultado.filter((s) => s.genero === filtroGenero);
     }
-
     switch (ordenacaoAtual) {
-        case "recentes":
-            resultado.reverse();
-            break;
-        case "antigas":
-            break;
-        case "az":
-            resultado.sort((a, b) =>
-                (a.titulo || "").localeCompare(b.titulo || "", "pt-BR")
-            );
-            break;
-        case "za":
-            resultado.sort((a, b) =>
-                (b.titulo || "").localeCompare(a.titulo || "", "pt-BR")
-            );
-            break;
-        case "melhores":
-            resultado.sort(
-                (a, b) => calcularMedia(b.id) - calcularMedia(a.id)
-            );
-            break;
+        case "recentes": resultado.reverse(); break;
+        case "az": resultado.sort((a, b) => (a.titulo || "").localeCompare(b.titulo || "", "pt-BR")); break;
+        case "za": resultado.sort((a, b) => (b.titulo || "").localeCompare(a.titulo || "", "pt-BR")); break;
+        case "melhores": resultado.sort((a, b) => calcularMedia(b.id) - calcularMedia(a.id)); break;
     }
-
     return resultado;
 }
 
 function renderizarCatalogo() {
     if (!container) return;
 
-    const todas = lerSeries();
-
-    if (todas.length === 0) {
+    if (todasAsSeries.length === 0) {
         if (counterEl) counterEl.textContent = "0 séries";
         if (emptyStateEl) emptyStateEl.hidden = false;
         container.innerHTML = "";
@@ -433,11 +309,10 @@ function renderizarCatalogo() {
     }
 
     if (emptyStateEl) emptyStateEl.hidden = true;
-
-    const visiveis = aplicarFiltros(todas);
+    const visiveis = aplicarFiltros(todasAsSeries);
 
     if (counterEl) {
-        const total = todas.length;
+        const total = todasAsSeries.length;
         counterEl.textContent = total === 1 ? "1 série" : total + " séries";
     }
 
@@ -445,10 +320,8 @@ function renderizarCatalogo() {
 
     if (visiveis.length === 0) {
         const vazio = document.createElement("p");
-        vazio.style.width = "100%";
-        vazio.style.textAlign = "center";
-        vazio.style.color = "var(--text-faint)";
-        vazio.style.padding = "40px 0";
+        vazio.style.width = "100%"; vazio.style.textAlign = "center";
+        vazio.style.color = "var(--text-faint)"; vazio.style.padding = "40px 0";
         vazio.style.fontFamily = "Arial, sans-serif";
         vazio.textContent = "Nenhuma série corresponde à sua busca.";
         container.appendChild(vazio);
@@ -465,24 +338,14 @@ function renderizarCatalogo() {
 function renderizarChips() {
     if (!genreFilterEl) return;
 
-    const todas = lerSeries();
-
-    if (todas.length === 0) {
+    if (todasAsSeries.length === 0) {
         genreFilterEl.innerHTML = "";
         return;
     }
 
     const generosSet = new Set();
-    todas.forEach((s) => {
-        if (s.genero) generosSet.add(s.genero);
-    });
-
+    todasAsSeries.forEach((s) => { if (s.genero) generosSet.add(s.genero); });
     const generos = Array.from(generosSet).sort();
-
-    if (generos.length === 0) {
-        genreFilterEl.innerHTML = "";
-        return;
-    }
 
     genreFilterEl.innerHTML = "";
 
@@ -491,11 +354,7 @@ function renderizarChips() {
     chipTodos.classList.add("genre_chip");
     if (filtroGenero === "todos") chipTodos.classList.add("active");
     chipTodos.textContent = "Todos";
-    chipTodos.addEventListener("click", () => {
-        filtroGenero = "todos";
-        renderizarChips();
-        renderizarCatalogo();
-    });
+    chipTodos.addEventListener("click", () => { filtroGenero = "todos"; renderizarChips(); renderizarCatalogo(); });
     genreFilterEl.appendChild(chipTodos);
 
     generos.forEach((g) => {
@@ -504,39 +363,29 @@ function renderizarChips() {
         chip.classList.add("genre_chip");
         if (filtroGenero === g) chip.classList.add("active");
         chip.textContent = g;
-        chip.addEventListener("click", () => {
-            filtroGenero = g;
-            renderizarChips();
-            renderizarCatalogo();
-        });
+        chip.addEventListener("click", () => { filtroGenero = g; renderizarChips(); renderizarCatalogo(); });
         genreFilterEl.appendChild(chip);
     });
 }
 
-if (container && document.querySelector(".home_content")) {
+async function iniciarHome() {
+    if (!container || !document.querySelector(".home_content")) return;
+    
+    todasAsSeries = await buscarSeriesAPI();
+    cacheAvaliacoes = await buscarAvaliacoesAPI();
+    
     montarCarrossel();
     renderizarChips();
     renderizarCatalogo();
 
-    if (searchInput) {
-        searchInput.addEventListener("input", (event) => {
-            filtroBusca = event.target.value;
-            renderizarCatalogo();
-        });
-    }
-
-    if (sortSelect) {
-        sortSelect.addEventListener("change", (event) => {
-            ordenacaoAtual = event.target.value;
-            renderizarCatalogo();
-        });
-    }
+    if (searchInput) searchInput.addEventListener("input", (e) => { filtroBusca = e.target.value; renderizarCatalogo(); });
+    if (sortSelect) sortSelect.addEventListener("change", (e) => { ordenacaoAtual = e.target.value; renderizarCatalogo(); });
 }
+iniciarHome();
 
 /* ============================================================
    MODAL DE CONFIRMAÇÃO (deletar)
    ============================================================ */
-
 const modalOverlay = document.getElementById("modal_overlay");
 const modalText = document.getElementById("modal_text");
 const modalCancel = document.getElementById("modal_cancel");
@@ -547,9 +396,7 @@ let serieParaDeletar = null;
 function abrirModalDeletar(serie) {
     if (!modalOverlay) return;
     serieParaDeletar = serie;
-    if (modalText) {
-        modalText.textContent = `Tem certeza que deseja deletar "${serie.titulo}"? Essa ação não pode ser desfeita.`;
-    }
+    if (modalText) modalText.textContent = `Tem certeza que deseja deletar "${serie.titulo}"? Essa ação não pode ser desfeita.`;
     modalOverlay.hidden = false;
 }
 
@@ -559,39 +406,34 @@ function fecharModalDeletar() {
     serieParaDeletar = null;
 }
 
-if (modalCancel) {
-    modalCancel.addEventListener("click", fecharModalDeletar);
-}
-
-if (modalOverlay) {
-    modalOverlay.addEventListener("click", (event) => {
-        if (event.target === modalOverlay) fecharModalDeletar();
-    });
-}
+if (modalCancel) modalCancel.addEventListener("click", fecharModalDeletar);
+if (modalOverlay) modalOverlay.addEventListener("click", (e) => { if (e.target === modalOverlay) fecharModalDeletar(); });
 
 if (modalConfirm) {
-    modalConfirm.addEventListener("click", () => {
+    modalConfirm.addEventListener("click", async () => {
         if (!serieParaDeletar) return;
-
-        const lista = lerSeries();
-        const novaLista = lista.filter((s) => s.id !== serieParaDeletar.id);
-        salvarSeries(novaLista);
-
-        const avaliacoes = lerAvaliacoes();
-        delete avaliacoes[serieParaDeletar.id];
-        salvarAvaliacoes(avaliacoes);
-
-        fecharModalDeletar();
-        montarCarrossel();
-        renderizarChips();
-        renderizarCatalogo();
+        
+        try {
+            const res = await fetch(`/api/series/${serieParaDeletar.id}`, { method: 'DELETE' });
+            if (!res.ok) throw new Error("Erro ao deletar no servidor");
+            
+            todasAsSeries = todasAsSeries.filter(s => s.id !== serieParaDeletar.id);
+            delete cacheAvaliacoes[serieParaDeletar.id];
+            
+            fecharModalDeletar();
+            montarCarrossel();
+            renderizarChips();
+            renderizarCatalogo();
+        } catch (e) {
+            console.error("Erro ao deletar:", e);
+            alert("Não foi possível deletar a série.");
+        }
     });
 }
 
 /* ============================================================
    FORM — cadastro e edição
    ============================================================ */
-
 const formulario = document.getElementById("meu_formulario");
 
 if (formulario) {
@@ -614,8 +456,6 @@ if (formulario) {
     let imagemBase64 = "";
     let serieEditandoId = null;
     let imagemOriginal = "";
-
-    /* ---------- Modo edição ---------- */
 
     try {
         const dados = sessionStorage.getItem(CHAVE_SERIE_EDITANDO);
@@ -640,16 +480,13 @@ if (formulario) {
 
             sessionStorage.removeItem(CHAVE_SERIE_EDITANDO);
         }
-    } catch (erro) {
-        console.warn("Erro ao carregar edição:", erro);
+    } catch (erro) { 
+        console.warn("Erro ao carregar edição:", erro); 
     }
-
-    /* ---------- Preview de imagem ---------- */
 
     inputImagem.addEventListener("change", () => {
         const file = inputImagem.files[0];
         if (!file) return;
-
         const leitor = new FileReader();
         leitor.onload = () => {
             imagemBase64 = leitor.result;
@@ -657,117 +494,73 @@ if (formulario) {
             previewWrap.hidden = false;
         };
         leitor.readAsDataURL(file);
+        inputImagem.classList.remove("invalid");
     });
 
     previewRemove.addEventListener("click", () => {
-        imagemBase64 = "";
+        imagemBase64 = ""; 
         inputImagem.value = "";
-        previewWrap.hidden = true;
-        previewImg.src = "";
+        previewWrap.hidden = true; 
+        previewImg.removeAttribute("src"); // Correção do erro de URL vazia
     });
 
-    /* ---------- Validação ---------- */
-
     function limparErros() {
-        [inputTitulo, inputGenero, inputImagem, inputDesc].forEach((el) => {
-            el.classList.remove("invalid");
-        });
-        erroTitulo.textContent = "";
-        erroGenero.textContent = "";
-        erroImagem.textContent = "";
-        erroDesc.textContent = "";
+        [inputTitulo, inputGenero, inputImagem, inputDesc].forEach((el) => el.classList.remove("invalid"));
+        erroTitulo.textContent = ""; erroGenero.textContent = "";
+        erroImagem.textContent = ""; erroDesc.textContent = "";
     }
 
     function validar() {
         limparErros();
         let valido = true;
-
-        if (!inputTitulo.value.trim()) {
-            inputTitulo.classList.add("invalid");
-            erroTitulo.textContent = "Informe o nome da série.";
-            valido = false;
-        }
-
-        if (!inputGenero.value) {
-            inputGenero.classList.add("invalid");
-            erroGenero.textContent = "Escolha um gênero.";
-            valido = false;
-        }
-
-        if (!imagemBase64) {
-            inputImagem.classList.add("invalid");
-            erroImagem.textContent = "Selecione uma imagem de capa.";
-            valido = false;
-        }
-
-        if (!inputDesc.value.trim()) {
-            inputDesc.classList.add("invalid");
-            erroDesc.textContent = "Escreva uma sinopse.";
-            valido = false;
-        }
-
+        if (!inputTitulo.value.trim()) { inputTitulo.classList.add("invalid"); erroTitulo.textContent = "Informe o nome da série."; valido = false; }
+        if (!inputGenero.value) { inputGenero.classList.add("invalid"); erroGenero.textContent = "Escolha um gênero."; valido = false; }
+        if (!imagemBase64) { inputImagem.classList.add("invalid"); erroImagem.textContent = "Selecione uma imagem."; valido = false; }
+        if (!inputDesc.value.trim()) { inputDesc.classList.add("invalid"); erroDesc.textContent = "Escreva uma sinopse."; valido = false; }
         return valido;
     }
 
-    [inputTitulo, inputGenero, inputDesc].forEach((el) => {
-        el.addEventListener("input", () => {
-            el.classList.remove("invalid");
-        });
-    });
+    [inputTitulo, inputGenero, inputDesc].forEach((el) => el.addEventListener("input", () => el.classList.remove("invalid")));
 
-    inputImagem.addEventListener("change", () => {
-        inputImagem.classList.remove("invalid");
-    });
-
-    /* ---------- Submit ---------- */
-
-    formulario.addEventListener("submit", (evento) => {
+    formulario.addEventListener("submit", async (evento) => {
         evento.preventDefault();
-
         if (!validar()) return;
 
         const titulo = inputTitulo.value.trim();
         const genero = inputGenero.value;
         const descricao = inputDesc.value.trim();
 
-        const lista = lerSeries();
+        const novaSerie = {
+            id: serieEditandoId || gerarId(),
+            titulo: titulo,
+            genero: genero,
+            descricao: descricao,
+            imagem: imagemBase64 || imagemOriginal,
+            descImagem: `Imagem da série ${titulo}`
+        };
 
-        if (serieEditandoId) {
-            const index = lista.findIndex((s) => s.id === serieEditandoId);
-            if (index !== -1) {
-                lista[index] = {
-                    ...lista[index],
-                    titulo: titulo,
-                    genero: genero,
-                    descricao: descricao,
-                    imagem: imagemBase64 || imagemOriginal,
-                    descImagem: `Imagem da série ${titulo}`
-                };
-                salvarSeries(lista);
+        try {
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Salvando...";
+
+            const res = await fetch('/api/series', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(novaSerie)
+            });
+
+            if (res.ok) {
+                submitBtn.textContent = serieEditandoId ? "✓ Alterações salvas!" : "✓ Série adicionada!";
+                setTimeout(() => window.location.href = "index.html", 900);
+            } else {
+                throw new Error("Erro do servidor: " + res.status);
             }
-            submitBtn.textContent = "✓ Alterações salvas!";
-        } else {
-            const novaSerie = {
-                id: gerarId(),
-                titulo: titulo,
-                genero: genero,
-                descricao: descricao,
-                imagem: imagemBase64,
-                descImagem: `Imagem da série ${titulo}`
-            };
-            lista.push(novaSerie);
-            salvarSeries(lista);
-            submitBtn.textContent = "✓ Série adicionada!";
+        } catch (erro) {
+            console.error("Erro ao salvar:", erro);
+            submitBtn.textContent = "Erro. Tente novamente.";
+            submitBtn.disabled = false; // Destrava o botão
         }
-
-        submitBtn.disabled = true;
-
-        setTimeout(() => {
-            window.location.href = "index.html";
-        }, 900);
     });
-
-    /* ---------- Cancelar edição ---------- */
 
     if (cancelLink) {
         cancelLink.addEventListener("click", (event) => {
@@ -781,7 +574,6 @@ if (formulario) {
 /* ============================================================
    CARD — página de detalhes da série
    ============================================================ */
-
 const serieImageEl = document.getElementById("serie_image");
 const serieNameEl = document.getElementById("serie_name");
 const serieGenreEl = document.getElementById("serie_genre");
@@ -792,68 +584,67 @@ const backdropEl = document.getElementById("movie_backdrop");
 
 if (serieImageEl && serieNameEl && sinopseEl) {
     let serie = null;
-
     try {
         const dados = sessionStorage.getItem(CHAVE_SERIE_SELECIONADA);
         if (dados) serie = JSON.parse(dados);
-    } catch (erro) {
-        console.warn("Erro ao ler série selecionada:", erro);
+    } catch (erro) { 
+        console.warn("Erro ao ler série:", erro); 
     }
 
-    if (!serie) serie = serieDestaque;
+    if (serie) {
+        serieImageEl.src = serie.imagem || "";
+        serieImageEl.alt = serie.descImagem || "";
+        serieNameEl.textContent = serie.titulo || "Série sem título";
+        sinopseEl.textContent = serie.descricao || "Sem sinopse.";
 
-    serieImageEl.src = serie.imagem || "";
-    serieImageEl.alt = serie.descImagem || `Imagem da série ${serie.titulo || ""}`;
-    serieNameEl.textContent = serie.titulo || "Série sem título";
-    sinopseEl.textContent = serie.descricao || "Sem sinopse disponível.";
-
-    if (backdropEl && serie.imagem) {
-        backdropEl.style.backgroundImage = `url("${serie.imagem}")`;
-    }
-
-    if (serieGenreEl) {
-        if (serie.genero) {
-            serieGenreEl.textContent = serie.genero;
-        } else {
-            serieGenreEl.hidden = true;
+        if (backdropEl && serie.imagem) backdropEl.style.backgroundImage = `url("${serie.imagem}")`;
+        if (serieGenreEl) { 
+            serieGenreEl.textContent = serie.genero || ""; 
+            if(!serie.genero) serieGenreEl.hidden = true; 
         }
-    }
 
-    if (btnEditEl) {
-        btnEditEl.addEventListener("click", () => {
-            sessionStorage.setItem(CHAVE_SERIE_EDITANDO, JSON.stringify(serie));
-        });
-    }
+        if (btnEditEl) {
+            btnEditEl.addEventListener("click", () => {
+                sessionStorage.setItem(CHAVE_SERIE_EDITANDO, JSON.stringify(serie));
+            });
+        }
 
-    /* ---------- Estrelas clicáveis ---------- */
+        if (starsEl) {
+            const serieId = serie.id;
+            starsEl.dataset.serieId = serieId;
+            const estrelas = starsEl.querySelectorAll("span");
 
-    if (starsEl) {
-        const serieId = serie.id || serie.titulo;
-        starsEl.dataset.serieId = serieId;
+            function pintarEstrelas(nota) {
+                estrelas.forEach((estrela) => {
+                    const valor = Number(estrela.dataset.value);
+                    estrela.style.color = valor <= nota ? "var(--accent)" : "rgba(255, 255, 255, 0.3)";
+                });
+            }
 
-        const estrelas = starsEl.querySelectorAll("span");
+            buscarAvaliacoesAPI().then(avaliacoes => {
+                const notaAtual = avaliacoes[serieId] || 0;
+                pintarEstrelas(notaAtual);
+            });
 
-        function pintarEstrelas(nota) {
             estrelas.forEach((estrela) => {
-                const valor = Number(estrela.dataset.value);
-                estrela.style.color = valor <= nota ? "var(--accent)" : "rgba(255, 255, 255, 0.3)";
+                estrela.addEventListener("click", async () => {
+                    const nota = Number(estrela.dataset.value);
+                    pintarEstrelas(nota);
+
+                    try {
+                        await fetch('/api/avaliacoes', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ id: serieId, nota: nota })
+                        });
+                    } catch(e) {
+                        console.error("Erro ao salvar estrela:", e);
+                    }
+                });
             });
         }
-
-        const avaliacoes = lerAvaliacoes();
-        const notaAtual = avaliacoes[serieId] || 0;
-        pintarEstrelas(notaAtual);
-
-        estrelas.forEach((estrela) => {
-            estrela.addEventListener("click", () => {
-                const nota = Number(estrela.dataset.value);
-
-                const lista = lerAvaliacoes();
-                lista[serieId] = nota;
-                salvarAvaliacoes(lista);
-
-                pintarEstrelas(nota);
-            });
-        });
+    } else {
+        serieNameEl.textContent = "Nenhuma série selecionada";
+        sinopseEl.textContent = "Volte para a página inicial e clique em uma série.";
     }
 }
