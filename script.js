@@ -22,10 +22,6 @@ if (LOGO_TOGGLE) {
 /* ============================================================
    UTILIDADES E CHAMADAS À API
    ============================================================ */
-function gerarId() {
-    return "serie_" + Date.now() + "_" + Math.random().toString(36).slice(2, 7);
-}
-
 function truncarTexto(texto, limite) {
     if (!texto) return "";
     if (texto.length <= limite) return texto;
@@ -501,7 +497,7 @@ if (formulario) {
         imagemBase64 = ""; 
         inputImagem.value = "";
         previewWrap.hidden = true; 
-        previewImg.removeAttribute("src"); // Correção do erro de URL vazia
+        previewImg.removeAttribute("src");
     });
 
     function limparErros() {
@@ -531,7 +527,8 @@ if (formulario) {
         const descricao = inputDesc.value.trim();
 
         const novaSerie = {
-            id: serieEditandoId || gerarId(),
+            // id só existe na edição; na criação o MySQL gera o AUTO_INCREMENT
+            id: serieEditandoId || null,
             titulo: titulo,
             genero: genero,
             descricao: descricao,
@@ -558,7 +555,7 @@ if (formulario) {
         } catch (erro) {
             console.error("Erro ao salvar:", erro);
             submitBtn.textContent = "Erro. Tente novamente.";
-            submitBtn.disabled = false; // Destrava o botão
+            submitBtn.disabled = false;
         }
     });
 

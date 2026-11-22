@@ -1,87 +1,175 @@
 const express = require('express');
+const pool = require('./db');
+
 const app = express();
 
-// Middlewares
-app.use(express.json({ limit: '10mb' })); // Permite ler JSON no body das requisições
-app.use(express.static('./')); // Serve os arquivos HTML, CSS e JS da pasta atual
+app.use(express.json({ limit: '20mb' }));   // imagens Base64 grandes
+app.use(express.static('./'));              // serve HTML/CSS/JS
 
 // ==========================================
-// BANCO DE DADOS EM MEMÓRIA (Substituirá o MySQL depois)
+// GET: listar todas as séries
 // ==========================================
-let bancoSeries = [
-    {
-        id: "exemplo_breaking_bad",
-        titulo: "Breaking Bad",
-        genero: "Drama",
-        descricao: "Walter White, um professor de química do ensino médio, é diagnosticado com câncer de pulmão em estágio terminal. Para garantir o futuro financeiro de sua família, ele decide usar seus conhecimentos de química para fabricar e vender metanfetamina, mergulhando em um mundo perigoso do crime organizado.",
-        imagem: "https://image.tmdb.org/t/p/w500/ggFHVNu6YYI5L9pCfOacjizRGt.jpg",
-        descImagem: "Pôster da série Breaking Bad"
-    },
-    {
-        id: "exemplo_stranger_things",
-        titulo: "Stranger Things",
-        genero: "Ficção",
-        descricao: "Quando um garoto desaparece em uma pequena cidade de Indiana, seus amigos descobrem uma menina misteriosa com poderes telecinéticos. Juntos, eles precisam enfrentar forças sobrenaturais e segredos do governo que ameaçam a cidade e o mundo como o conhecem.",
-        imagem: "https://image.tmdb.org/t/p/w500/49WJfeN0moxb9IPfGn8AIqMGskD.jpg",
-        descImagem: "Pôster da série Stranger Things"
-    }
-];
-
-let bancoAvaliacoes = {}; // Ex: { "exemplo_breaking_bad": 5 }
-
-// ==========================================
-// ROTAS DA API
-// ==========================================
-
-// GET: Retorna todas as séries
-app.get('/api/series', (req, res) => {
-    res.json(bancoSeries);
-});
-
-// POST: Adiciona ou Edita uma série
-app.post('/api/series', (req, res) => {
-    const serieRecebida = req.body;
-    
-    // Verifica se é uma edição (se o ID já existe) ou uma criação nova
-    const index = bancoSeries.findIndex(s => s.id === serieRecebida.id);
-    
-    if (index !== -1) {
-        // Se achou, atualiza
-        bancoSeries[index] = serieRecebida;
-        res.json({ mensagem: "Série atualizada!", serie: serieRecebida });
-    } else {
-        // Se não achou, cria uma nova
-        bancoSeries.push(serieRecebida);
-        res.status(201).json({ mensagem: "Série criada!", serie: serieRecebida });
+app.get('/api/series', async (req, res) => {
+    try {
+        const [rows] = await pool.query(`
+            SELECT
+                s.idseries        AS id,
+                s.titulo          AS titulo,
+                s.descricao       AS descricao,
+                s.imagem          AS imagem,
+                s.desc_imagem     AS descImagem,
+                g.titulo_genero   AS genero
+            FROM series s
+            INNER JOIN generos g ON g.idgeneros = s.generos_idgeneros
+            ORDER BY s.idseries ASC
+        `);
+        res.json(rows);
+    } catch (err) {
+        console.error('GET /api/series:', err);
+        res.status(500).json({ erro: 'Erro ao buscar séries.' });
     }
 });
 
-// DELETE: Remove uma série
-app.delete('/api/series/:id', (req, res) => {
-    const id = req.params.id;
-    bancoSeries = bancoSeries.filter(s => s.id !== id);
-    
-    // Remove a avaliação dela também
-    if (bancoAvaliacoes[id]) {
-        delete bancoAvaliacoes[id];
+// ==========================================
+// GET: uma série específica (para card.html?id=X)
+// ==========================================
+app.get('/api/series/:id', async (req, res) => {
+    try {
+        const [rows] = await pool.query(`
+            SELECT
+                s.idseries        AS id,
+                s.titulo          AS titulo,
+                s.descricao       AS descricao,
+                s.imagem          AS imagem,
+                s.desc_imagem     AS descImagem,
+                g.titulo_genero   AS genero
+            FROM series s
+            INNER JOIN generos g ON g.idgeneros = s.generos_idgeneros
+            WHERE s.idseries = ?
+        `, [req.params.id]);
+
+        if (rows.length === 0) return res.status(404).json({ erro: 'Série não encontrada.' });
+        res.json(rows[0]);
+    } catch (err) {
+        console.error('GET /api/series/:id:', err);
+        res.status(500).json({ erro: 'Erro ao buscar série.' });
     }
-    
-    res.json({ mensagem: "Série deletada!" });
 });
 
-// GET: Retorna as avaliações
-app.get('/api/avaliacoes', (req, res) => {
-    res.json(bancoAvaliacoes);
+// ==========================================
+// POST: cria ou atualiza uma série
+// ==========================================
+app.post('/api/series', async (req, res) => {
+    const { id, titulo, genero, descricao, imagem, descImagem } = req.body;
+
+    if (!titulo || !genero || !descricao || !imagem) {
+        return res.status(400).json({ erro: 'Campos obrigatórios faltando.' });
+    }
+
+    try {
+        // Resolve o gênero (texto -> idgeneros)
+        const [genRows] = await pool.query(
+            'SELECT idgeneros FROM generos WHERE titulo_genero = ?',
+            [genero]
+        );
+        if (genRows.length === 0) {
+            return res.status(400).json({ erro: `Gênero "${genero}" não existe.` });
+        }
+        const idGenero = genRows[0].idgeneros;
+
+        if (id) {
+            // Edição
+            const [result] = await pool.query(
+                `UPDATE series
+                    SET titulo = ?, descricao = ?, imagem = ?, desc_imagem = ?, generos_idgeneros = ?
+                  WHERE idseries = ?`,
+                [titulo, descricao, imagem, descImagem || null, idGenero, id]
+            );
+
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ erro: 'Série não encontrada para edição.' });
+            }
+            return res.json({ mensagem: 'Série atualizada!', id: Number(id) });
+        }
+
+        // Criação
+        const [result] = await pool.query(
+            `INSERT INTO series (titulo, descricao, imagem, desc_imagem, generos_idgeneros)
+             VALUES (?, ?, ?, ?, ?)`,
+            [titulo, descricao, imagem, descImagem || null, idGenero]
+        );
+
+        return res.status(201).json({ mensagem: 'Série criada!', id: result.insertId });
+    } catch (err) {
+        console.error('POST /api/series:', err);
+        res.status(500).json({ erro: 'Erro ao salvar série.' });
+    }
 });
 
-// POST: Salva uma avaliação
-app.post('/api/avaliacoes', (req, res) => {
+// ==========================================
+// DELETE: remove uma série (avaliações caem por CASCADE)
+// ==========================================
+app.delete('/api/series/:id', async (req, res) => {
+    try {
+        const [result] = await pool.query(
+            'DELETE FROM series WHERE idseries = ?',
+            [req.params.id]
+        );
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ erro: 'Série não encontrada.' });
+        }
+        res.json({ mensagem: 'Série deletada!' });
+    } catch (err) {
+        console.error('DELETE /api/series/:id:', err);
+        res.status(500).json({ erro: 'Erro ao deletar série.' });
+    }
+});
+
+// ==========================================
+// GET: todas as avaliações { "<id>": nota, ... }
+// ==========================================
+app.get('/api/avaliacoes', async (req, res) => {
+    try {
+        const [rows] = await pool.query(
+            'SELECT series_idseries AS serie_id, nota FROM avaliacoes'
+        );
+        const mapa = {};
+        rows.forEach((r) => { mapa[r.serie_id] = r.nota; });
+        res.json(mapa);
+    } catch (err) {
+        console.error('GET /api/avaliacoes:', err);
+        res.status(500).json({ erro: 'Erro ao buscar avaliações.' });
+    }
+});
+
+// ==========================================
+// POST: cria ou atualiza a avaliação de uma série
+// ==========================================
+app.post('/api/avaliacoes', async (req, res) => {
     const { id, nota } = req.body;
-    bancoAvaliacoes[id] = nota;
-    res.json({ mensagem: "Avaliação salva!", avaliacoes: bancoAvaliacoes });
+    const notaNum = Number(nota);
+
+    if (!id || !Number.isInteger(notaNum) || notaNum < 1 || notaNum > 5) {
+        return res.status(400).json({ erro: 'Dados inválidos.' });
+    }
+
+    try {
+        await pool.query(
+            `INSERT INTO avaliacoes (series_idseries, nota)
+             VALUES (?, ?)
+             ON DUPLICATE KEY UPDATE nota = VALUES(nota)`,
+            [id, notaNum]
+        );
+        res.json({ mensagem: 'Avaliação salva!', id, nota: notaNum });
+    } catch (err) {
+        console.error('POST /api/avaliacoes:', err);
+        res.status(500).json({ erro: 'Erro ao salvar avaliação.' });
+    }
 });
 
-// Inicia o servidor
+// ==========================================
+// Inicia servidor
+// ==========================================
 app.listen(3000, () => {
-    console.log("🚀 Servidor Mafe rodando em http://localhost:3000");
+    console.log('🚀 Servidor Mafe rodando em http://localhost:3000');
 });
