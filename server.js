@@ -170,6 +170,21 @@ app.post('/api/avaliacoes', async (req, res) => {
 // ==========================================
 // Inicia servidor
 // ==========================================
-app.listen(3000, () => {
-    console.log('🚀 Servidor Mafe rodando em http://localhost:3000');
-});
+
+async function iniciarServidor() {
+    try {
+        const conexao = await pool.getConnection();
+
+        console.log('Conexão com MySQL realizada com sucesso!');
+        conexao.release();
+
+        app.listen(3000, () => {
+            console.log('Mafe rodando em http://localhost:3000');
+        });
+
+    } catch (erro) {
+        console.error('Erro ao conectar com MySQL:', erro.message);
+    }
+}
+
+iniciarServidor();
